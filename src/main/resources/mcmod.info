@@ -1,0 +1,17 @@
+[{
+  "modid" : "LiveSpectator",
+  "name" : "LiveSpectator",
+  "version" : "${version}",
+  "mcversion": "${mcversion}",
+  "url" : "",
+  "credits" : "",
+  "authors": [
+    "Chikachi"
+  ],
+  "description": "Spectate random players - useful for livestreams",
+  "logoFile" : "",
+  "updateUrl" : "",
+  "parent" : "",
+  "screenshots": [
+  ]
+}]

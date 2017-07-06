@@ -1,0 +1,107 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+    }
+}
+repositories {
+    ivy {
+        name "CurseForge"
+        artifactPattern 'http://addons-origin.cursecdn.com/files/[organisation]/[module]-[revision].[ext]'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'java'
+
+def mcVersion = '1.10.2'
+def forgeVersion = '12.18.3.2185'
+def modVersion = '1.0.0'
+
+version = 'mc' + mcVersion + '-' + modVersion
+//noinspection GroovyUnusedAssignment
+group = "chikachi.spectator" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "LiveSpectator"
+
+//noinspection GroovyUnusedAssignment
+sourceCompatibility = 1.8
+//noinspection GroovyUnusedAssignment
+targetCompatibility = 1.8
+
+minecraft {
+    version = mcVersion + '-' + forgeVersion
+
+    if (file('../run').exists()) {
+        runDir = '../run'
+    } else {
+        runDir = 'run'
+    }
+
+    mappings = "stable_29"
+}
+
+def printDebug(message) {
+    println "[" + archivesBaseName + "] " + message
+}
+
+class CurseForgeDependencyInfo {
+    public String module, version, ext
+    private String fileid
+
+    CurseForgeDependencyInfo(String module, String version, String ext, String fileid) {
+        this.module = module
+        this.version = version
+        this.ext = ext
+        this.fileid = fileid
+    }
+
+    String GetFileId() {
+        return Integer.parseInt(fileid.substring(0, 4)) + "/" + Integer.parseInt(fileid.substring(4))
+    }
+}
+
+// Dependencies on CurseForge
+List<CurseForgeDependencyInfo> curseForgeDependencies = new ArrayList<CurseForgeDependencyInfo>()
+
+dependencies {
+    for (CurseForgeDependencyInfo dependency : curseForgeDependencies) {
+        if (file("../" + dependency.module).exists()) {
+            printDebug "Using local " + dependency.module + " project"
+            compile project(":" + dependency.module)
+            continue
+        }
+        if (file("./" + dependency.module + ".jar").exists()) {
+            printDebug "Using local " + dependency.module + " compiled jar"
+            compile files("./" + dependency.module + ".jar")
+            continue
+        }
+        compile group: dependency.GetFileId(), name: dependency.module, version: dependency.version, ext: dependency.ext
+    }
+}
+
+processResources {
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        // replace version and mcversion
+        expand 'version': modVersion, 'mcversion': project.minecraft.version
+    }
+
+    // copy everything else, thats not the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+idea { module { inheritOutputDirs = true } }
